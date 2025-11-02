@@ -1,0 +1,111 @@
+import os
+import random
+import hashlib
+import math
+import sys
+from dataclasses import dataclass
+
+def int_from_bytes(b: bytes) -> int:
+    return int.from_bytes(b, byteorder='big')
+
+def int_to_bytes(x: int, length: int = None) -> bytes:
+    if x == 0:
+        out = b'\x00'
+    else:
+        out = x.to_bytes((x.bit_length() + 7) // 8, byteorder='big')
+    if length is not None:
+        if len(out) > length:
+            raise ValueError("int too large for specified length")
+        return b'\x00' * (length - len(out)) + out
+    return out
+
+def is_probable_prime(n: int, k: int = 20) -> bool:
+    """Miller-Rabin probabilistic primality test."""
+    if n < 2:
+        return False
+    small_primes = [2,3,5,7,11,13,17,19,23,29,31,37,41,43,47]
+    for p in small_primes:
+        if n % p == 0:
+            return n == p
+    d = n - 1
+    s = 0
+    while d % 2 == 0:
+        d //= 2
+        s += 1
+    for _ in range(k):
+        a = random.randrange(2, n - 1)
+        x = pow(a, d, n)
+        if x == 1 or x == n - 1:
+            continue
+        composite = True
+        for _ in range(s - 1):
+            x = pow(x, 2, n)
+            if x == n - 1:
+                composite = False
+                break
+        if composite:
+            return False
+    return True
+
+def generate_prime(bits: int) -> int:
+    assert bits >= 2
+    while True:
+        candidate = random.getrandbits(bits) | (1 << (bits - 1)) | 1
+        if is_probable_prime(candidate):
+            return candidate
+
+def egcd(a: int, b: int):
+    if b == 0:
+        return (a, 1, 0)
+    g, x1, y1 = egcd(b, a % b)
+    return (g, y1, x1 - (a // b) * y1)
+
+def modinv(a: int, m: int) -> int:
+    try:
+        return pow(a, -1, m)
+    except ValueError:
+        g, x, _ = egcd(a, m)
+        if g != 1:
+            raise ValueError("No modular inverse")
+        return x % m
+
+@dataclass
+class RSAKeyPair:
+    n: int
+    e: int
+    d: int
+    p: int = None
+    q: int = None
+    dP: int = None
+    dQ: int = None
+    qInv: int = None
+
+def generate_rsa_keypair(bits: int = 2048, e: int = 65537) -> RSAKeyPair:
+    half_bits = bits // 2
+    print("Generating p and q ...")
+    p = generate_prime(half_bits)
+    q = generate_prime(half_bits)
+    while p == q:
+        q = generate_prime(half_bits)
+
+    n = p * q
+    phi = (p - 1) * (q - 1)
+    d = modinv(e, phi)
+
+    # CRT parameters
+    dP = d % (p - 1)
+    dQ = d % (q - 1)
+    qInv = modinv(q, p)
+
+    print("RSA keypair generated successfully!")
+    return RSAKeyPair(n, e, d, p, q, dP, dQ, qInv)
+
+# === MAIN EXECUTION ===
+if __name__ == "__main__":
+    print("Generating RSA 1024-bit keypair (this may take a few seconds)...")
+    keypair = generate_rsa_keypair(1024)
+    print("\nPublic Key (n, e):")
+    print(f"n = {keypair.n}\n")
+    print(f"e = {keypair.e}")
+    print("\nPrivate Key (d):")
+    print(f"d = {keypair.d}")
