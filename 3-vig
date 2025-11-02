@@ -1,0 +1,99 @@
+import java.util.Scanner;
+
+public class VigenereCipher {
+
+    // Converts a character to its alphabet index (A=0, B=1, ..., Z=25)
+    public static int charToIndex(char c) {
+        return c - 'A';
+    }
+
+    // Converts an index to a character (0=A, 1=B, ..., 25=Z)
+    public static char indexToChar(int i) {
+        return (char) (i + 'A');
+    }
+
+    // Prepares the input text: converts to uppercase and removes non-letters
+    public static String prepareText(String text) {
+        return text.toUpperCase().replaceAll("[^A-Z]", "");
+    }
+
+    // Extends the key to match the length of the text
+    public static String extendKey(String key, int length) {
+        StringBuilder extended = new StringBuilder();
+        key = key.toUpperCase().replaceAll("[^A-Z]", "");
+        for (int i = 0; i < length; i++) {
+            extended.append(key.charAt(i % key.length()));
+        }
+        return extended.toString();
+    }
+
+    // Encrypts the plaintext using the Vigenère cipher
+    public static String vigenereEncrypt(String plaintext, String key) {
+        plaintext = prepareText(plaintext);
+        String extendedKey = extendKey(key, plaintext.length());
+        StringBuilder ciphertext = new StringBuilder();
+
+        System.out.println("\nEncryption Steps:");
+        System.out.println("Plaintext  : " + plaintext);
+        System.out.println("Key        : " + extendedKey);
+
+        for (int i = 0; i < plaintext.length(); i++) {
+            int ptIndex = charToIndex(plaintext.charAt(i));
+            int keyIndex = charToIndex(extendedKey.charAt(i));
+            int ctIndex = (ptIndex + keyIndex) % 26;
+            char ctChar = indexToChar(ctIndex);
+            ciphertext.append(ctChar);
+
+            System.out.printf("Step %2d: (%c + %c) -> (%d + %d) %% 26 = %d -> %c\n",
+                    i + 1, plaintext.charAt(i), extendedKey.charAt(i),
+                    ptIndex, keyIndex, ctIndex, ctChar);
+        }
+
+        return ciphertext.toString();
+    }
+
+    // Decrypts the ciphertext using the Vigenère cipher
+    public static String vigenereDecrypt(String ciphertext, String key) {
+        ciphertext = prepareText(ciphertext);
+        String extendedKey = extendKey(key, ciphertext.length());
+        StringBuilder plaintext = new StringBuilder();
+
+        System.out.println("\nDecryption Steps:");
+        System.out.println("Ciphertext : " + ciphertext);
+        System.out.println("Key        : " + extendedKey);
+
+        for (int i = 0; i < ciphertext.length(); i++) {
+            int ctIndex = charToIndex(ciphertext.charAt(i));
+            int keyIndex = charToIndex(extendedKey.charAt(i));
+            int ptIndex = (ctIndex - keyIndex + 26) % 26;
+            char ptChar = indexToChar(ptIndex);
+            plaintext.append(ptChar);
+
+            System.out.printf("Step %2d: (%c - %c) -> (%d - %d + 26) %% 26 = %d -> %c\n",
+                    i + 1, ciphertext.charAt(i), extendedKey.charAt(i),
+                    ctIndex, keyIndex, ptIndex, ptChar);
+        }
+
+        return plaintext.toString();
+    }
+
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the key: ");
+        String key = scanner.nextLine();
+
+        System.out.print("Enter the plaintext: ");
+        String plaintext = scanner.nextLine();
+
+        // Encryption
+        System.out.println("\nEncrypting...");
+        String ciphertext = vigenereEncrypt(plaintext, key);
+        System.out.println("\nFinal Ciphertext: " + ciphertext);
+
+        // Decryption
+        System.out.println("\nDecrypting...");
+        String decryptedText = vigenereDecrypt(ciphertext, key);
+        System.out.println("\nFinal Decrypted Text: " + decryptedText);
+    }
+}
