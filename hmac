@@ -1,0 +1,157 @@
+# Experiment: Cryptographic Hash Functions and HMAC
+# Aim: To understand and implement collision-resistant hash functions using HMAC
+#hmac_experiment.py
+import hashlib
+import hmac
+
+# Function to demonstrate hash functions
+def hash_demo(message):
+    print("\n--- HASH FUNCTION DEMONSTRATION ---")
+    print("Original Message:", message)
+   
+    # SHA-256 Hash
+    sha256_hash = hashlib.sha256(message.encode()).hexdigest()
+    print("\nSHA-256 Hash:")
+    print(sha256_hash)
+   
+    # SHA-512 Hash
+    sha512_hash = hashlib.sha512(message.encode()).hexdigest()
+    print("\nSHA-512 Hash:")
+    print(sha512_hash)
+   
+    return sha256_hash, sha512_hash
+
+# Function to demonstrate HMAC
+def hmac_demo(message, key):
+    print("\n--- HMAC DEMONSTRATION ---")
+    print("Message:", message)
+    print("Secret Key:", key)
+   
+    key_bytes = key.encode()
+    message_bytes = message.encode()
+   
+    # Using SHA256 for HMAC
+    hmac_sha256 = hmac.new(key_bytes, message_bytes, hashlib.sha256).hexdigest()
+    print("\nHMAC using SHA-256:")
+    print(hmac_sha256)
+   
+    # Using SHA512 for HMAC
+    hmac_sha512 = hmac.new(key_bytes, message_bytes, hashlib.sha512).hexdigest()
+    print("\nHMAC using SHA-512:")
+    print(hmac_sha512)
+   
+    return hmac_sha256, hmac_sha512
+
+# Main program
+if __name__ == "__main__":
+    print("==== Cryptographic Hash Functions and HMAC Implementation ====")
+    message = input("Enter the message: ")
+    key = input("Enter the secret key for HMAC: ")
+   
+    # Demonstrate Hash Functions
+    hash_demo(message)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+import java.util.Scanner;
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+import java.security.MessageDigest;
+
+public class HMACExperiment {
+
+    // Function to demonstrate hash functions
+    public static void hashDemo(String message) throws Exception {
+        System.out.println("\n--- HASH FUNCTION DEMONSTRATION ---");
+        System.out.println("Original Message: " + message);
+
+        // SHA-256 Hash
+        MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
+        byte[] sha256Hash = sha256.digest(message.getBytes());
+        System.out.println("\nSHA-256 Hash:");
+        System.out.println(bytesToHex(sha256Hash));
+
+        // SHA-512 Hash
+        MessageDigest sha512 = MessageDigest.getInstance("SHA-512");
+        byte[] sha512Hash = sha512.digest(message.getBytes());
+        System.out.println("\nSHA-512 Hash:");
+        System.out.println(bytesToHex(sha512Hash));
+    }
+
+    // Function to demonstrate HMAC
+    public static void hmacDemo(String message, String key) throws Exception {
+        System.out.println("\n--- HMAC DEMONSTRATION ---");
+        System.out.println("Message: " + message);
+        System.out.println("Secret Key: " + key);
+
+        byte[] keyBytes = key.getBytes();
+        byte[] messageBytes = message.getBytes();
+
+        // HMAC using SHA-256
+        Mac hmacSha256 = Mac.getInstance("HmacSHA256");
+        SecretKeySpec keySpec256 = new SecretKeySpec(keyBytes, "HmacSHA256");
+        hmacSha256.init(keySpec256);
+        byte[] hmac256 = hmacSha256.doFinal(messageBytes);
+        System.out.println("\nHMAC using SHA-256:");
+        System.out.println(bytesToHex(hmac256));
+
+        // HMAC using SHA-512
+        Mac hmacSha512 = Mac.getInstance("HmacSHA512");
+        SecretKeySpec keySpec512 = new SecretKeySpec(keyBytes, "HmacSHA512");
+        hmacSha512.init(keySpec512);
+        byte[] hmac512 = hmacSha512.doFinal(messageBytes);
+        System.out.println("\nHMAC using SHA-512:");
+        System.out.println(bytesToHex(hmac512));
+    }
+
+    // Helper function to convert bytes to hex string
+    public static String bytesToHex(byte[] bytes) {
+        StringBuilder sb = new StringBuilder();
+        for (byte b : bytes)
+            sb.append(String.format("%02x", b));
+        return sb.toString();
+    }
+
+    // Main program
+    public static void main(String[] args) {
+        try {
+            System.out.println("==== Cryptographic Hash Functions and HMAC Implementation ====");
+            Scanner sc = new Scanner(System.in);
+
+            System.out.print("Enter the message: ");
+            String message = sc.nextLine();
+
+            System.out.print("Enter the secret key for HMAC: ");
+            String key = sc.nextLine();
+
+            hashDemo(message);
+            hmacDemo(message, key);
+
+            System.out.println("\nExperiment Completed Successfully");
+            sc.close();
+        } catch (Exception e) {
+            System.out.println("Error: " + e.getMessage());
+        }
+    }
+}
+
+   
+    # Demonstrate HMAC
+    hmac_demo(message, key)
+   
+    print("\nExperiment Completed Successfully ")
