@@ -1,0 +1,198 @@
+
+import java.util.*;
+
+public class ProductCipher {
+
+    // Caesar Cipher Encryption
+    public static String caesarEncrypt(String text, int shift) {
+        StringBuilder result = new StringBuilder();
+        for (char ch : text.toCharArray()) {
+            if ('A' <= ch && ch <= 'Z') {
+                result.append((char) ((ch - 'A' + shift + 26) % 26 + 'A'));
+            } else if ('a' <= ch && ch <= 'z') {
+                result.append((char) ((ch - 'a' + shift + 26) % 26 + 'a'));
+            } else {
+                result.append(ch);
+            }
+        }
+        return result.toString();
+    }
+
+    // Caesar Cipher Decryption
+    public static String caesarDecrypt(String text, int shift) {
+        return caesarEncrypt(text, -shift);
+    }
+
+    // Determine column read order from keyword (stable sort by character)
+    public static int[] keyOrderFromKeyword(String keyword) {
+        int len = keyword.length();
+        CharacterIndexPair[] pairs = new CharacterIndexPair[len];
+        for (int i = 0; i < len; i++) {
+            pairs[i] = new CharacterIndexPair(keyword.charAt(i), i);
+        }
+        Arrays.sort(pairs, Comparator.comparing((CharacterIndexPair p) -> p.ch).thenComparingInt(p -> p.idx));
+        int[] order = new int[len];
+        for (int i = 0; i < len; i++) {
+            order[i] = pairs[i].idx;
+        }
+        return order;
+    }
+
+    private static class CharacterIndexPair {
+        char ch;
+        int idx;
+        CharacterIndexPair(char ch, int idx) {
+            this.ch = ch;
+            this.idx = idx;
+        }
+    }
+
+    // Columnar Transposition Encryption
+    public static Object[] columnarEncrypt(String text, String keyword, char padChar) {
+        int cols = keyword.length();
+        int rows = (int) Math.ceil(text.length() / (double) cols);
+        int total = rows * cols;
+        StringBuilder padded = new StringBuilder(text);
+        for (int i = text.length(); i < total; i++) {
+            padded.append(padChar);
+        }
+
+        // Build matrix row-wise
+        char[][] matrix = new char[rows][cols];
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                matrix[r][c] = padded.charAt(r * cols + c);
+            }
+        }
+
+        int[] order = keyOrderFromKeyword(keyword);
+
+        // Build ciphertext by reading columns in keyword order
+        StringBuilder ciphertext = new StringBuilder();
+        for (int col : order) {
+            for (int r = 0; r < rows; r++) {
+                ciphertext.append(matrix[r][col]);
+            }
+        }
+        return new Object[] {ciphertext.toString(), matrix, order, padded.toString()};
+    }
+
+    // Columnar Transposition Decryption
+    public static Object[] columnarDecrypt(String ciphertext, String keyword, char padChar) {
+        int cols = keyword.length();
+        int rows = (int) Math.ceil(ciphertext.length() / (double) cols);
+        int total = rows * cols;
+
+        StringBuilder ctext = new StringBuilder(ciphertext);
+        while (ctext.length() < total) {
+            ctext.append(padChar);
+        }
+
+        int[] order = keyOrderFromKeyword(keyword);
+
+        char[][] matrix = new char[rows][cols];
+
+        int idx = 0;
+        for (int col : order) {
+            for (int r = 0; r < rows; r++) {
+                matrix[r][col] = ctext.charAt(idx++);
+            }
+        }
+
+        StringBuilder substitutedPadded = new StringBuilder();
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < cols; c++) {
+                substitutedPadded.append(matrix[r][c]);
+            }
+        }
+        return new Object[] {substitutedPadded.toString(), matrix, order};
+    }
+
+    // Print the matrix with headers and order info
+    public static void printMatrix(char[][] matrix, String keyword, int[] order, String title) {
+        System.out.println("\n" + title);
+        int rows = matrix.length;
+        int cols = matrix[0].length;
+
+        // Header
+        System.out.print("    ");
+        for (int i = 0; i < cols; i++) {
+            System.out.print(i + "  ");
+        }
+        System.out.println();
+
+        System.out.print("    ");
+        for (int i = 0; i < cols; i++) {
+            System.out.print("---");
+        }
+        System.out.println();
+
+        // Rows
+        for (int r = 0; r < rows; r++) {
+            System.out.printf("r%02d| ", r);
+            for (int c = 0; c < cols; c++) {
+                System.out.print(matrix[r][c] + "  ");
+            }
+            System.out.println();
+        }
+
+        System.out.println("Keyword: " + keyword);
+        System.out.print("Column read order: ");
+        for (int o : order) {
+            System.out.print(o + " ");
+        }
+        System.out.println();
+    }
+
+    // Main method for interaction
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter the plaintext: ");
+        String plaintext = scanner.nextLine();
+
+        System.out.print("Enter Caesar shift (e.g., 3): ");
+        int shift = scanner.nextInt();
+        scanner.nextLine();  // consume newline
+
+        System.out.print("Enter keyword for transposition: ");
+        String keyword = scanner.nextLine();
+
+        System.out.println("\n--- ENCRYPTION ---");
+
+        // Step 1: Caesar substitution
+        String substituted = caesarEncrypt(plaintext, shift);
+        System.out.println("After Caesar substitution: " + substituted);
+
+        // Step 2: Columnar transposition
+        Object[] encryptResult = columnarEncrypt(substituted, keyword, 'X');
+        String ciphertext = (String) encryptResult[0];
+        char[][] matrix = (char[][]) encryptResult[1];
+        int[] order = (int[]) encryptResult[2];
+        String padded = (String) encryptResult[3];
+
+        printMatrix(matrix, keyword, order, "Transposition Matrix (Encryption)");
+        System.out.println("Final Ciphertext (Product Cipher): " + ciphertext);
+
+        System.out.println("\n--- DECRYPTION ---");
+
+        // Step A: Reverse transposition
+        Object[] decryptResult = columnarDecrypt(ciphertext, keyword, 'X');
+        String recoveredSubstitutedPadded = (String) decryptResult[0];
+        char[][] decMatrix = (char[][]) decryptResult[1];
+        int[] decOrder = (int[]) decryptResult[2];
+
+        // Remove padding 'X'
+        String recoveredSubstituted = recoveredSubstitutedPadded.replaceAll("X+$", "");
+
+        printMatrix(decMatrix, keyword, decOrder, "Transposition Matrix (Decryption)");
+        System.out.println("Recovered substituted text: " + recoveredSubstituted);
+
+        // Step B: Reverse Caesar
+        String recoveredPlaintext = caesarDecrypt(recoveredSubstituted, shift);
+        System.out.println("Recovered Plaintext: " + recoveredPlaintext);
+
+        scanner.close();
+    }
+}
+
