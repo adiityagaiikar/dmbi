@@ -1,0 +1,18 @@
+ip.addr == 
+ip.src ==
+dns
+tcp
+tls
+tcp.port == 
+tcp.dstport == 
+frame contains 'google'
+
+
+
+nmap -p 1-200 ipaddr
+nmap -sT ipaddr
+nmap -sU ipaddr
+nmap -F ipaddr
+nmap -O ipaddr
+nmap -A ipaddr
+namp ipaddr
